@@ -1,56 +1,69 @@
-{ pkgs, ... }:
-{
-  imports = [
-    ./hardware-configuration.nix
-    ./disko.nix
-    ../../modules/preservation-rollback.nix
-    ../../profiles/shared.nix
-  ];
+{ self, inputs, ... }: {
+  flake.nixosConfigurations.nixos-dell = inputs.nixpkgs.lib.nixosSystem {
+    modules = [
+      ./_system/hardware-configuration.nix
+      ./_system/disko.nix
 
-  nixpkgs.hostPlatform = "x86_64-linux";
+      inputs.disko.nixosModules.disko
+      inputs.preservation.nixosModules.default
 
-  networking.hostName = "nixos-dell";
-  networking.networkmanager.enable = true;
-  networking.networkmanager.wifi.backend = "iwd";
+      self.nixosModules.base
 
-  hardware.bluetooth.enable = true;
-  hardware.enableRedistributableFirmware = true;
+      ({ pkgs, ... }: {
+        nixpkgs.hostPlatform = "x86_64-linux";
 
-  preservation.preserveAt."/persistent".directories = [
-    "/etc/NetworkManager/system-connections"
-    "/var/lib/NetworkManager"
-    "/var/lib/iwd"
-    "/var/lib/bluetooth"
-  ];
+        networking.hostName = "nixos-dell";
+        networking.networkmanager.enable = true;
+        networking.networkmanager.wifi.backend = "iwd";
 
-  services.logind.enable = true;
-  services.logind.settings.Login.HandleLidSwitch = "ignore";
-  services.logind.settings.Login.HandlePowerKey = "poweroff";
+        hardware.bluetooth.enable = true;
+        hardware.enableRedistributableFirmware = true;
 
-  services.openssh.enable = true;
-  services.openssh.hostKeys = [{ path = "/persistent/etc/ssh/ssh_host_ed25519_key"; type = "ed25519"; }];
-  services.openssh.settings.PasswordAuthentication = false;
-  services.openssh.settings.PermitRootLogin = "no";
+        preservation.preserveAt."/persistent".directories = [
+          "/etc/NetworkManager/system-connections"
+          "/var/lib/NetworkManager"
+          "/var/lib/iwd"
+          "/var/lib/bluetooth"
+        ];
 
-  services.fwupd.enable = true;
-  services.power-profiles-daemon.enable = true;
+        services.logind.enable = true;
+        services.logind.settings.Login.HandleLidSwitch = "ignore";
+        services.logind.settings.Login.HandlePowerKey = "poweroff";
 
-  users.users.root.hashedPassword = "!";
+        services.openssh.enable = true;
+        services.openssh.hostKeys = [
+          {
+            path = "/persistent/etc/ssh/ssh_host_ed25519_key";
+            type = "ed25519";
+          }
+        ];
+        services.openssh.settings.PasswordAuthentication = false;
+        services.openssh.settings.PermitRootLogin = "no";
 
-  services.getty.autologinUser = "chuck";
-  users.users.chuck.extraGroups = [ "wheel" ];
-  users.users.chuck.hashedPasswordFile = "/persistent/secrets/chuck";
-  users.users.chuck.isNormalUser = true;
-  users.users.chuck.openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJbHkOpoucRSqD/zKiyC2xtjw0F/JeUtZlrmMuLy2iWd" ];
+        services.fwupd.enable = true;
+        services.power-profiles-daemon.enable = true;
 
-  programs.labwc.enable = true;
-  programs.bash.loginShellInit = ''[ "$(tty)" = /dev/tty1 ] && exec labwc'';
+        users.users.root.hashedPassword = "!";
 
-  environment.systemPackages = [
-    pkgs.alacritty
-    pkgs.btop
-    pkgs.fastfetch
-    pkgs.htop
-    pkgs.neovim
-  ];
+        services.getty.autologinUser = "chuck";
+        users.users.chuck.extraGroups = [ "wheel" ];
+        users.users.chuck.hashedPasswordFile = "/persistent/secrets/chuck";
+        users.users.chuck.isNormalUser = true;
+        users.users.chuck.openssh.authorizedKeys.keys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJbHkOpoucRSqD/zKiyC2xtjw0F/JeUtZlrmMuLy2iWd"
+        ];
+
+        programs.labwc.enable = true;
+        programs.bash.loginShellInit = ''[ "$(tty)" = /dev/tty1 ] && exec labwc'';
+
+        environment.systemPackages = [
+          pkgs.alacritty
+          pkgs.btop
+          pkgs.fastfetch
+          pkgs.htop
+          pkgs.neovim
+        ];
+      })
+    ];
+  };
 }
