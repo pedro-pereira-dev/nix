@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo="https://github.com/pedro-pereira-dev/nixfiles"
+command -v nix >/dev/null || { echo 'nix: command not found' && exit 1; }
+nix_run() { nix --extra-experimental-features "nix-command flakes" run "$@"; }
+
+host=""
+remote=""
+
+case "$0" in --*) set -- "$0" "$@" ;; esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --host) host="${2:?--host needs a value}" && shift 2 ;;
+  --remote) remote="${2:?--remote needs user@host}" && shift 2 ;;
+  esac
+done
+
+as_root=()
+build_on=(--build-on remote)
+key=()
+
+if [ -z "$remote" ]; then
+  remote="root@localhost"
+
+  rm -fr /tmp/key /tmp/key.pub
+  ssh-keygen -q -t ed25519 -N "" -f /tmp/key
+  sudo install -d -m 700 /root/.ssh
+  cat /tmp/key.pub | sudo tee -a /root/.ssh/authorized_keys >/dev/null
+
+  as_root=(sudo)
+  build_on=()
+  key=(-i /tmp/key)
+fi
+
+sudo rm -fr /tmp/nixfiles
+nix_run nixpkgs#git -- clone --depth 1 "$repo" /tmp/nixfiles
+[ -n "$host" ] || host="$(find /tmp/nixfiles/hosts -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | nix_run nixpkgs#fzf)"
+[ -f "/tmp/nixfiles/hosts/$host/default.nix" ] || { echo "$host - no configuration" && exit 1; }
+hardware="/tmp/nixfiles/hosts/$host/_system/hardware-configuration.nix"
+
+"${as_root[@]}" nix --extra-experimental-features "nix-command flakes" run github:nix-community/nixos-anywhere -- \
+  --flake "path:/tmp/nixfiles#$host" \
+  "${build_on[@]}" \
+  --target-host "$remote" \
+  "${key[@]}" \
+  --generate-hardware-config nixos-generate-config "$hardware"
