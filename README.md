@@ -7,23 +7,23 @@
 - `--remote <user@host> --host <name>`: installs the host `<name>` on another machine with nixos-anywhere, partitioning its disk with disko. The target must be a NixOS live ISO and reachable over SSH as root.
 
 ```bash
-    # local bootstrap
-    bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)"
+# local bootstrap
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)"
 ```
 
 ```bash
-    # local bootstrap without prompts
-    bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --host nixos-example
+# local bootstrap without prompts
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --host nixos-example
 ```
 
 ```bash
-    # remote bootstrap
-    bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --remote root@192.168.1.99
+# remote bootstrap
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --remote root@192.168.1.99
 ```
 
 ```bash
-    # remote bootstrap without prompts
-    bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --remote root@192.168.1.99 --host nixos-example
+# remote bootstrap without prompts
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --remote root@192.168.1.99 --host nixos-example
 ```
 
 ## User passwords
