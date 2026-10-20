@@ -1,29 +1,52 @@
 # nixfiles
 
-## Bootstrap
+## Usage
 
-`bootstrap` needs `nix` and pulls the flake from this repository.
-- No arguments - applies the host matching the machine's `hostname` to the local system with `nixos-rebuild switch`.
-- `--remote <user@host> --host <name>`: installs the host `<name>` on another machine with nixos-anywhere, partitioning its disk with disko. The target must be a NixOS live ISO and reachable over SSH as root.
+`nix` is required to run `./nixfiles`
+
+Operation, one of:
+* `--activate` - switches a installed system to a configuration
+* `--install` - installs nixos using nixos-anywhere configuration, wiping a defined disk
+
+System, one of:
+* `--self` - configures the machine executing the script
+* `--target <user@host>` - configures a system reachable by ssh
+
+Not required:
+* `--host <name>` - chooses which configuration to apply, prompts a selection if omitted
 
 ```bash
-# local bootstrap
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)"
+./nixfiles --activate --self
 ```
 
 ```bash
-# local bootstrap without prompts
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --host nixos-example
+./nixfiles --activate --target user@192.168.1.99
 ```
 
 ```bash
-# remote bootstrap
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --remote root@192.168.1.99
+./nixfiles --install --self
 ```
 
 ```bash
-# remote bootstrap without prompts
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/bootstrap)" --remote root@192.168.1.99 --host nixos-example
+./nixfiles --install --target user@192.168.1.99
+```
+
+Using remote repository:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/nixfiles)" --activate --self
+```
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/nixfiles)" --activate --target user@192.168.1.99
+```
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/nixfiles)" --install --self
+```
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/pedro-pereira-dev/nixfiles/main/nixfiles)" --install --target user@192.168.1.99
 ```
 
 ## User passwords
@@ -35,19 +58,3 @@ Create one per user, as root on the machine, before applying the config:
     mkdir -p /persistent/secrets && chmod 700 /persistent/secrets
     mkpasswd -m yescrypt > /persistent/secrets/$_user
     chmod 600 /persistent/secrets/$_user
-
-## Layout
-
-Dendritic pattern: flake-parts + import-tree. Every `.nix` file under `modules/` and `hosts/` is a flake-parts module, except files prefixed with `_`.
-
-- `modules/` shared features, published as `flake.modules.nixos.<name>`.
-- `hosts/<name>/default.nix` defines `flake.nixosConfigurations.<name>` and lists its features explicitly. Plain NixOS files for that host (`_disko.nix`, `_hardware-configuration.nix`) are imported by path.
-
-To add a host, create `hosts/<name>/default.nix`; no other file needs editing.
-
-nix --extra-experimental-features "nix-command flakes" run nixpkgs#nixos-rebuild -- switch \
-  --flake path:.#nixos-dell \
-  --target-host chuck@192.168.1.193 \
-  --build-host chuck@192.168.1.193 \
-  --sudo \
-  --ask-sudo-password

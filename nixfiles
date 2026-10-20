@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo="https://github.com/pedro-pereira-dev/nixfiles"
+command -v nix >/dev/null || { echo 'nix: command not found' && exit 1; }
+nix=(nix --extra-experimental-features "nix-command flakes")
+
+activate=""
+install=""
+self=""
+target=""
+host=""
+
+case "$0" in --*) set -- "$0" "$@" ;; esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --activate) activate=1 && shift ;;
+  --install) install=1 && shift ;;
+  --self) self=1 && shift ;;
+  --target) target="${2:?--target needs user@host}" && shift 2 ;;
+  --host) host="${2:?--host needs a value}" && shift 2 ;;
+  *) shift ;;
+  esac
+done
+
+[ -n "$activate" ] || [ -n "$install" ] || { echo "--activate or --install is required" && exit 1; }
+[ -z "$activate" ] || [ -z "$install" ] || { echo "--activate and --install are exclusive" && exit 1; }
+
+[ -n "$self" ] || [ -n "$target" ] || { echo "--self or --target is required" && exit 1; }
+[ -z "$self" ] || [ -z "$target" ] || { echo "--self and --target are exclusive" && exit 1; }
+
+workspace="$(cd "$(dirname -- "$0")" && pwd)"
+if [ ! -f "$0" ] || [ ! -d "$workspace/hosts" ]; then
+  workspace="/tmp/nixfiles"
+  sudo rm -fr "$workspace"
+  "${nix[@]}" run nixpkgs#git -- clone --depth 1 "$repo" "$workspace"
+fi
+
+[ -z "$activate" ] || [ -n "$host" ] || { [ -n "$self" ] && host="$(hostname)" || host="$(ssh "$target" hostname)"; }
+[ -n "$host" ] || host="$(find "$workspace/hosts" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | "${nix[@]}" run nixpkgs#fzf)"
+[ -f "$workspace/hosts/$host/default.nix" ] || { echo "$host - no configuration" && exit 1; }
+
+flake="path:$workspace#$host"
+hardware="$workspace/hosts/$host/_system/hardware-configuration.nix"
+
+if [ -n "$activate" ] && [ -n "$self" ]; then
+  sudo "${nix[@]}" run \
+    nixpkgs#nixos-rebuild -- switch \
+    --flake "$flake"
+fi
+
+if [ -n "$activate" ] && [ -n "$target" ]; then
+  "${nix[@]}" run \
+    nixpkgs#nixos-rebuild -- switch \
+    --flake "$flake" \
+    --target-host "$target" \
+    --build-host "$target" \
+    --sudo \
+    --ask-sudo-password
+fi
+
+if [ -n "$install" ] && [ -n "$self" ]; then
+  rm -fr /tmp/key /tmp/key.pub
+  ssh-keygen -q -t ed25519 -N "" -f /tmp/key
+  sudo install -d -m 700 /root/.ssh
+  cat /tmp/key.pub | sudo tee -a /root/.ssh/authorized_keys >/dev/null
+  sudo "${nix[@]}" run \
+    github:nix-community/nixos-anywhere -- \
+    --generate-hardware-config nixos-generate-config "$hardware" \
+    --flake "$flake" \
+    --target-host root@localhost -i /tmp/key
+fi
+
+if [ -n "$install" ] && [ -n "$target" ]; then
+  "${nix[@]}" run \
+    github:nix-community/nixos-anywhere -- \
+    --generate-hardware-config nixos-generate-config "$hardware" \
+    --flake "$flake" \
+    --target-host "$target" \
+    --build-on remote
+fi

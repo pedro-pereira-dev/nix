@@ -12,6 +12,9 @@
         nixpkgs.hostPlatform = "x86_64-linux";
         networking.hostName = "nixos-desktop";
 
+        boot.initrd.kernelModules = [ "amdgpu" ];
+        services.lact.enable = true;
+
         services.fwupd.enable = true;
 
         programs.labwc.enable = true;
@@ -25,6 +28,8 @@
           pkgs.fastfetch
           pkgs.htop
           pkgs.neovim
+          pkgs.radeontop
+          pkgs.vulkan-tools
         ];
       })
     ];

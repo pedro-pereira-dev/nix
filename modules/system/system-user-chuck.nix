@@ -4,6 +4,7 @@
 
     users.users.chuck.isNormalUser = true;
     users.users.chuck.extraGroups = [ "wheel" ];
+    nix.settings.trusted-users = [ "chuck" ];
 
     users.users.chuck.hashedPasswordFile = "/persistent/secrets/chuck";
     users.users.chuck.initialPassword = "changeme";
