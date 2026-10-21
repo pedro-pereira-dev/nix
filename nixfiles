@@ -43,6 +43,15 @@ fi
 flake="path:$workspace#$host"
 hardware="$workspace/hosts/$host/_system/hardware-configuration.nix"
 
+if grep -q "darwinConfigurations" "$workspace/hosts/$host/default.nix"; then
+  [ -z "$install" ] || { echo "$host - --install is not supported on darwin" && exit 1; }
+  [ -z "$target" ] || { echo "$host - --target is not supported on darwin" && exit 1; }
+  sudo -H "${nix[@]}" run \
+    nix-darwin -- switch \
+    --flake "$flake"
+  exit 0
+fi
+
 if [ -n "$activate" ] && [ -n "$self" ]; then
   sudo "${nix[@]}" run \
     nixpkgs#nixos-rebuild -- switch \
