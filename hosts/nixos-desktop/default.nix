@@ -6,6 +6,7 @@
       ./_system/hardware-configuration.nix
       ./_system/disko.nix
       self.nixosModules.profile-base
+      self.nixosModules.system-code
       self.nixosModules.profile-desktop
       self.nixosModules.system-sshd
       self.nixosModules.system-user-chuck
@@ -23,7 +24,6 @@
           pkgs.btop
           pkgs.fastfetch
           pkgs.htop
-          pkgs.neovim
           pkgs.radeontop
           pkgs.vulkan-tools
         ];
