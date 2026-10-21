@@ -6,7 +6,7 @@
     "/" = {
       fsType = "tmpfs";
       mountOptions = [
-        "size=1G"
+        "size=25%"
         "mode=755"
       ];
     };
