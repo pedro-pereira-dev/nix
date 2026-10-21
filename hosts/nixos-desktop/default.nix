@@ -6,6 +6,7 @@
       ./_system/hardware-configuration.nix
       ./_system/disko.nix
       self.nixosModules.profile-base
+      self.nixosModules.profile-desktop
       self.nixosModules.system-sshd
       self.nixosModules.system-user-chuck
       ({ pkgs, ... }: {
@@ -16,11 +17,6 @@
         services.lact.enable = true;
 
         services.fwupd.enable = true;
-
-        programs.labwc.enable = true;
-
-        services.getty.autologinUser = "chuck";
-        programs.bash.loginShellInit = ''[ "$(tty)" = /dev/tty1 ] && exec labwc'';
 
         environment.systemPackages = [
           pkgs.alacritty

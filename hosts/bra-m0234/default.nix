@@ -7,6 +7,7 @@
         networking.hostName = "bra-m0234";
         system.primaryUser = "pereiped";
         system.stateVersion = 6;
+        security.pam.services.sudo_local.touchIdAuth = true;
 
         nix.settings.experimental-features = [
           "nix-command"
@@ -21,13 +22,21 @@
         homebrew = {
           enable = true;
           taps = [ "deskflow/tap" ];
-          casks = [ "deskflow/tap/deskflow" ];
+          casks = [
+            "deskflow/tap/deskflow"
+            "librewolf"
+          ];
         };
 
         home-manager = {
           useGlobalPkgs = true;
           useUserPackages = true;
-          users.pereiped.home.stateVersion = "25.05";
+          users.pereiped = {
+            home.stateVersion = "25.05";
+            home.file.".librewolf/librewolf.overrides.cfg".text = ''
+              pref("browser.tabs.inTitlebar", 0);
+            '';
+          };
         };
       })
     ];

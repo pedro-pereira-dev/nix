@@ -6,6 +6,7 @@
       ./_system/hardware-configuration.nix
       ./_system/disko.nix
       self.nixosModules.profile-base
+      self.nixosModules.profile-desktop
       self.nixosModules.system-bluetooth
       self.nixosModules.system-sshd
       self.nixosModules.system-user-chuck
