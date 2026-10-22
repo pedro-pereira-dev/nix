@@ -10,16 +10,13 @@
       self.nixosModules.profile-desktop
       self.nixosModules.system-bluetooth
       self.nixosModules.system-sshd
+      inputs.home-manager.nixosModules.home-manager
       self.nixosModules.system-user-chuck
-      ({ pkgs, ... }: {
+      ({ ... }: {
         nixpkgs.hostPlatform = "x86_64-linux";
         networking.hostName = "nixos-dell";
 
         services.fwupd.enable = true;
-
-        environment.systemPackages = [
-          pkgs.alacritty
-        ];
       })
     ];
   };

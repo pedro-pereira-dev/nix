@@ -9,6 +9,7 @@
       self.nixosModules.system-code
       self.nixosModules.profile-desktop
       self.nixosModules.system-sshd
+      inputs.home-manager.nixosModules.home-manager
       self.nixosModules.system-user-chuck
       ({ pkgs, ... }: {
         nixpkgs.hostPlatform = "x86_64-linux";
@@ -20,7 +21,6 @@
         services.fwupd.enable = true;
 
         environment.systemPackages = [
-          pkgs.alacritty
           pkgs.btop
           pkgs.fastfetch
           pkgs.htop
